@@ -1,10 +1,9 @@
-
 import socket
 import errno
+import time
 
 #-----------------CLIENT-------------------------#
 my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 port = 1111
 
@@ -13,7 +12,7 @@ def main():
     connected = False
 
     while True:
-
+        time.sleep(0.5)
         if not connected:
             try:
                 my_socket.connect(("localhost", port))
@@ -27,8 +26,14 @@ def main():
                     connected = False
 
         elif connected:
-            my_socket.sendall(b"test from client")
-            print(my_socket.recv(1024))
+            try:
+
+                my_socket.sendall(b"test from CLIENT ONE 11111")
+                data = my_socket.recv(1024)
+                print(data.decode())
+            except Exception as err:
+                print(err)
+
 
 
 main()
