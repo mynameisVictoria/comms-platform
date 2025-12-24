@@ -1,0 +1,3 @@
+things to look out for when trying to use this on real diffrent devices:
+  - it will probably only work on a local network
+  - change all "localhost", "127.0.0.1", and just "", to the actual ips, i will do this more sophisticatly just, not now
