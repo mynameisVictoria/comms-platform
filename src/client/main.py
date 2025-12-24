@@ -1,12 +1,24 @@
 import socket
 import errno
 import time
+import threading
+from queue import Queue
+import sys
 
 #-----------------CLIENT-------------------------#
 my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+my_socket.settimeout(0.5)
 
 port = 1111
 
+send_info_queue = Queue(maxsize=10)
+
+def handle_input():
+    while True:
+        send_info_input = input("send info: \n")
+        if send_info_input == "exit":
+            sys.exit()
+        send_info_queue.put(send_info_input)
 
 def main():
     connected = False
@@ -26,14 +38,21 @@ def main():
                     connected = False
 
         elif connected:
+            if send_info_queue.empty():
+                continue
+            elif not send_info_queue.empty():
+                try:
+                    my_socket.sendall(send_info_queue.get().encode("utf-8"))
+                    print("sent")
+                except Exception as err:
+                    print(err)
             try:
+                print(my_socket.recv(1024))
+            except socket.timeout:
+                pass
 
-                my_socket.sendall(b"test from CLIENT ONE 11111")
-                data = my_socket.recv(1024)
-                print(data.decode())
-            except Exception as err:
-                print(err)
-
-
+input_thread = threading.Thread(target=handle_input)
+input_thread.start()
 
 main()
+input_thread.join()
