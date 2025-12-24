@@ -23,7 +23,7 @@ def send_receive_data():
     while True:
         data = client.recv(1024)
         print("data received")
-        if not data:
+        if not data:         # if no data is received
             print(f"Client {address} disconnected")
             break
         client.send(b"hello from server")
