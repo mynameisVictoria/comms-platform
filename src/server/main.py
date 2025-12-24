@@ -15,16 +15,18 @@ accept_state = False
 client = None
 address = None
 
+print("Welcome!")
+
 my_socket.listen(5)
 
 def send_receive_data():
     while True:
-        client.sendall(b"test sending from server\n")
-
         data = client.recv(1024)
+        print("data received")
         if not data:
             print(f"Client {address} disconnected")
             break
+        client.send(b"hello from server")
 
         print(f"Received from {address}: {data.decode()}")
 
