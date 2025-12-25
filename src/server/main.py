@@ -8,48 +8,44 @@ port = 1111
 
 my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-my_socket.settimeout(0.5)
 
-my_socket.bind(("localhost", port))
+my_socket.bind(("0.0.0.0", port))
 
 accept_state = False
-
-client_address_dict = {}
 
 print("Welcome!")
 
 my_socket.listen(5)
 
-def send_receive_data(ip_address):
+def send_receive_data(thread_client, thread_address):
     while True:
-
         try:
-            dict_client = client_address_dict[ip_address]
-
-            data = dict_client.recv(1024)
+            thread_client.settimeout(0.1)
+            data = thread_client.recv(1024)
             print("data received")
             if not data:         # if no data is received
-                print(f"Client {ip_address} disconnected")
-                client_address_dict.pop(ip_address)
-                client_thread.join()
+                print(f"Client {thread_address} disconnected")
                 break
-            dict_client.send(b"hello from server")
+            thread_client.send(b"hello from server")
 
-            print(f"Received from {ip_address}: {data.decode()}")
+            print(f"Received from {thread_address}: {data.decode()}")
 
         except socket.timeout:
-            print(f"Socket timed out.")
-        except Exception:
             pass
+        except Exception as err:
+            print(f"{err}")
+
 
 while True:
-    time.sleep(0.5)
+    time.sleep(0.1)
     try:
         client, address = my_socket.accept()
-        client_address_dict.update({address: client})
-
-        client_thread = threading.Thread(target=send_receive_data(address))
+        client_thread = threading.Thread(
+            target=send_receive_data,
+            args=(client, address),
+            daemon=True    )
+        print("thread started")
         client_thread.start()
 
-    except Exception as e:
-        print(f"Error: {e}")
+    except Exception:
+        pass
