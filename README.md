@@ -18,9 +18,10 @@ simple communication, and i geuss techincly data sharing lol.
 - currently in pre-alpha
 - right now its not great lol
 - i will try to get
+- release for 0.0.1-pre-alpha testing is set for 00:00 January 1 2026
 
 Current version:
-0.1.0-dev
+0.1.1-dev
 
 ---
 
