@@ -12,9 +12,11 @@ port = 1111
 
 send_info_queue = Queue(maxsize=10)   # thread safe data exchange
 
+name = input("Whats your name?")
+
 def handle_input():
     while True:
-        send_info_input = input("send info: \n")
+        send_info_input = input("")
         send_info_queue.put(send_info_input)
         if send_info_input == "exit":
             break
@@ -51,7 +53,7 @@ def main():
                 continue
             elif not send_info_queue.empty():  #if it's not empty, try to send the data
                 try:
-                    send_data = send_info_queue.get()
+                    send_data = name + ": " + send_info_queue.get()
                     if send_data == "exit":
                         break
                     else:
