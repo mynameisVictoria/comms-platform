@@ -20,3 +20,13 @@ class JsonStoring:
             dict_data = json.loads(contents)
             dict_data["name"] = name
             file.write(json.dumps(dict_data))
+    @staticmethod
+    def check_name():
+        with open("user_data.json", "r", encoding="utf-8") as file:
+            contents = file.read()
+            dict_data = json.loads(contents)
+            name = dict_data["name"]
+            if dict_data["name"] is None:
+                return False
+            else:
+                return True
