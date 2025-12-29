@@ -7,6 +7,8 @@ simple communication, and i geuss techincly data sharing lol.
 - Runs in: the terminal
 - Eventually will: make it into a gui, dont expect it to be pretty though!
 - if u have any name suggestions, please tell me!!! if ur reading this you probably can contact me very easily, if not, youll find a way
+- i find ai in my opinion moraly unethical and i dont plan on letting any ai generated code being part of this code base
+  
 
 ## Tech Stuff
 - it is server-client model
