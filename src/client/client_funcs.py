@@ -4,7 +4,7 @@ class JsonStoring:
     def __init__(self, file_name):
         self.file_name = file_name
 
-    def read_name(self):
+    def get_name(self):
         with open(self.file_name, "r", encoding="utf-8") as file:
             contents = file.read()
             dict_data = json.loads(contents)
@@ -23,7 +23,6 @@ class JsonStoring:
         with open(self.file_name, "r", encoding="utf-8") as file:
             contents = file.read()
             dict_data = json.loads(contents)
-            name = dict_data["name"]
             if dict_data["name"] is None:
                 return False
             else:
