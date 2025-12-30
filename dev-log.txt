@@ -17,3 +17,8 @@ Friday, December 26, 2025, 06:05 EST
 Monday, 29 December 2025, 14:00~ 
 - kinda just refactored the entire client side script with tls, serverside too
 - server is also up and running, clients can connect, its all working honestly
+ Tuesday, 30 December 2025, 12:40~
+- the server works! but its kinda unstable, sometimes multiple users work sometimes not
+- client version on windows has also been made
+- oh and, tori 2 (mah friend from the us, im in europe) COULD CONNECT to the server
+- yayyy
