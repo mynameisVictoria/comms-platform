@@ -41,6 +41,8 @@ def handle_input():
         if not send_info_input.strip() == "":
             with message_lock:
                 send_info_queue.put(send_info_input)
+        else:
+            pass   
         if send_info_input == "exit":
             _thread.interrupt_main()
 def constant_recv(recv_socket):
