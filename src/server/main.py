@@ -1,10 +1,19 @@
 import socket
 import time
 import threading
+import ssl
 
 #-------------SERVER----------#
 
 port = 1111
+
+server_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+server_context.load_cert_chain(
+    certfile="/etc/letsencrypt/live/p9cx.org/fullchain.pem",
+    keyfile="/etc/letsencrypt/live/p9cx.org/privkey.pem"
+)
+
+client_context = ssl.create_default_context()
 
 my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -22,10 +31,13 @@ my_socket.listen(5)
 def send_receive_data(thread_client, thread_address):
     thread_client.settimeout(0.1)
     while True:
+        time.sleep(0.1)
         try:
             data = thread_client.recv(1024)
             if not data:         # if no data is received
                 print(f"Client {thread_address} disconnected")
+                with message_lock:
+                    message_list.append(f"Client {thread_address} disconnected")
                 with socket_lock:
                     if thread_client in socket_list:
                         socket_list.remove(thread_client)
@@ -37,8 +49,11 @@ def send_receive_data(thread_client, thread_address):
 
         except socket.timeout:
             pass
-        except Exception as err:
-            print(f"{err}")
+        except ConnectionResetError:
+            with socket_lock:
+                socket_list.remove(thread_client)
+                thread_client.close()
+                break
 
 def broadcast_messages():
     while True:
@@ -69,11 +84,12 @@ while True:
     time.sleep(0.1)
     try:
         client, address = my_socket.accept()
+        tls_client = server_context.wrap_socket(client, server_side=True)
         with socket_lock:
-            socket_list.append(client)
+            socket_list.append(tls_client)
         client_thread = threading.Thread(
             target=send_receive_data,
-            args=(client, address),
+            args=(tls_client, address),
             daemon=True)
 
         client_thread.start()
