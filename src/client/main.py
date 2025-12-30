@@ -15,8 +15,9 @@ context = ssl.create_default_context()
 port = 1111
 send_info_queue = Queue(maxsize=10)   # thread safe data exchange
 
-storing = JsonStoring("user_data.json")
+print("For more information check out the GitHub \n https://github.com/mynameisVictoria/comms-platform \n")
 
+storing = JsonStoring("user_data.json")
 if not storing.check_name():
     name = input("Whats your name?")
     storing.write_name(name)
@@ -25,10 +26,11 @@ elif storing.check_name():
     if name_decision.lower() == "y":
         new_name = input("input new name \n")
         storing.write_name(new_name)
+        print("simply type, and press enter to transmit \n")
     elif name_decision.lower() == "n":
-        print("cool")
+        print("simply type, and press enter to transmit \n")
     else:
-        print("\n")
+        print("simply type, and press enter to transmit \n")
 
 def handle_input():
     while True:
@@ -48,7 +50,6 @@ def constant_recv(recv_socket):
             pass
 
 def main():
-    connected = False
 
     while True:
         time.sleep(0.5)
@@ -64,8 +65,6 @@ def main():
             )
 
             tls_socket.connect((hostname, port))
-            print("socket connected")
-
             recv_thread = threading.Thread(target=constant_recv, daemon=True, args=(tls_socket,))
             recv_thread.start()
 
@@ -80,11 +79,11 @@ def main():
                             break
                         else:
                             tls_socket.sendall(send_data.encode("utf-8"))
-                    except (socket.error, OSError) as err:   #don't really know what can go wrong
+                    except (socket.error, OSError):   #don't really know what can go wrong
                         break
 
         except OSError as err:
-            if err.errno in (errno.EISCONN, 9): #bad file descripter, closed/already connected
+            if err.errno in (errno.EISCONN, 9): #bad file descriptor
                 continue
 
 input_thread = threading.Thread(target=handle_input)
