@@ -69,7 +69,7 @@ def broadcast_messages():
 
                 for list_client in socket_list[:]:
                     try:
-                        list_client.sendall(msg.encode())
+                        list_client.sendall(msg)
                     except OSError as e:
                         socket_list.remove(list_client)
                         list_client.close()
