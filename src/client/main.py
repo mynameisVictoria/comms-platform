@@ -6,6 +6,7 @@ from queue import Queue
 from client_funcs import *
 import ssl
 from datetime import datetime, timezone
+import sys
 #-----------------CLIENT-------------------------#
 
 hostname = "p9cx.org"
@@ -42,9 +43,9 @@ def handle_input():
             with message_lock:
                 send_info_queue.put(send_info_input)
         else:
-            pass   
+            pass
         if send_info_input == "exit":
-            _thread.interrupt_main()
+            sys.exit()
 def constant_recv(recv_socket):
     while True:
         sleep(0.1)
