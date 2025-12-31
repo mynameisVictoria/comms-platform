@@ -26,7 +26,7 @@ simple communication, and i geuss techincly data sharing lol.
 - and beta, or maybe just the first actuall release will have voice call
 
 Current version:
-0.5.0-dev
+0.5.1-dev
 
 ---
 
