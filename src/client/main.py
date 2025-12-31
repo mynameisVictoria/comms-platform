@@ -1,4 +1,3 @@
-import _thread
 import socket
 from time import sleep
 import threading
@@ -17,23 +16,25 @@ port = 1111
 send_info_queue = Queue(maxsize=10)   # thread safe data exchange
 message_lock = threading.Lock()
 
+QUICK_GUIDE = "simply type, and press enter to transmit: \n"
+
 print("For more information check out the GitHub \n https://github.com/mynameisVictoria/comms-platform \n")
 
 storing = JsonStoring("user_data.json")
 if not storing.check_name():
     name = input("Whats your name? \n")
     storing.write_name(name)
-    print("simply type, and press enter to transmit: \n")
+    print(QUICK_GUIDE)
 elif storing.check_name():
     name_decision = input(f"do you wish to change your name, current name: {storing.get_name()} \n y or n \n")
     if name_decision.lower() == "y":
         new_name = input("input new name \n")
         storing.write_name(new_name)
-        print("simply type, and press enter to transmit: \n")
+        print(QUICK_GUIDE)
     elif name_decision.lower() == "n":
-        print("simply type, and press enter to transmit: \n")
+        print(QUICK_GUIDE)
     else:
-        print("simply type, and press enter to transmit: \n")
+        print(QUICK_GUIDE)
 
 def handle_input():
     while True:
