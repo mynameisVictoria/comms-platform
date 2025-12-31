@@ -24,17 +24,12 @@ storing = JsonStoring("user_data.json")
 if not storing.check_name():
     name = input("Whats your name? \n")
     storing.write_name(name)
-    print(QUICK_GUIDE)
 elif storing.check_name():
     name_decision = input(f"do you wish to change your name, current name: {storing.get_name()} \n y or n \n")
     if name_decision.lower() == "y":
         new_name = input("input new name \n")
         storing.write_name(new_name)
-        print(QUICK_GUIDE)
-    elif name_decision.lower() == "n":
-        print(QUICK_GUIDE)
-    else:
-        print(QUICK_GUIDE)
+print(QUICK_GUIDE)
 
 def handle_input():
     while True:
