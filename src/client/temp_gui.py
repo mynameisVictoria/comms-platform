@@ -16,6 +16,7 @@
 import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QLineEdit, QPushButton, QScrollArea, QWidget, QVBoxLayout, QLabel, QHBoxLayout
 from PyQt6.QtGui import QIcon
+from PyQt6.QtCore import Qt
 from pathlib import Path
 from time import sleep
 
@@ -42,6 +43,7 @@ class MainWindow(QMainWindow):
 
         container_for_messages = QWidget()
         self.layout_for_messages = QVBoxLayout(container_for_messages) # Creates the layout for the widget in the scrolling area
+        self.layout_for_messages.addStretch() # So the messages start at the bottom
 
         self.labels = []
         self.label_count = 0
@@ -67,10 +69,10 @@ class MainWindow(QMainWindow):
     def receive_message(self, received_message:str):
         label = QLabel(received_message) # Sets up each messages formatting!
         label.setWordWrap(True)
-        label.setMinimumHeight(50)
+        label.setMinimumHeight(25)
         label.setMaximumHeight(100)
         # Adds the label to the message area
-        self.layout_for_messages.addWidget(label)
+        self.layout_for_messages.addWidget(label, alignment=Qt.AlignmentFlag.AlignBottom)
         self.labels.append(label)
         self.label_count += 1
 
