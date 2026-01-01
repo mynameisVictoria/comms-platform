@@ -1,5 +1,5 @@
 import socket
-import time
+from time import sleep
 import threading
 import ssl
 
@@ -15,40 +15,39 @@ server_context.load_cert_chain(
 
 client_context = ssl.create_default_context()
 
-my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-my_socket.bind(("0.0.0.0", port))
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 message_list = []
 socket_list = []
 socket_lock = threading.Lock()
 message_lock = threading.Lock()
 
-print("Welcome!")
-
-my_socket.listen(5)
+server_socket.bind(("0.0.0.0", port))
+server_socket.listen(5)
 
 def send_receive_data(thread_client, thread_address):
+
     thread_client.settimeout(0.1)
     while True:
-        time.sleep(0.1)
+        sleep(0.1)  #not to hoard the cpu lol
         try:
-            data = thread_client.recv(1024)
-            if not data:         # if no data is received
+            message_data = thread_client.recv(1024).decode("utf8")
+
+            if not message_data:         # if no data is received
                 print(f"Client {thread_address} disconnected")
-                with message_lock:
-                    message_list.append(f"Client {thread_address} disconnected".encode())
                 with socket_lock:
                     if thread_client in socket_list:
                         socket_list.remove(thread_client)
                 break
             with message_lock:
-                message_list.append(data)
+                message_list.append(message_data)
 
-            print(f"Received from {thread_address}: {data.decode()}")
+            print(f"Received from {thread_address}: {message_data}")
 
         except socket.timeout:
             pass
+
         except ConnectionResetError:
             with socket_lock:
                 socket_list.remove(thread_client)
@@ -58,46 +57,50 @@ def send_receive_data(thread_client, thread_address):
 
 def broadcast_messages():
     while True:
-        time.sleep(0.1)
+        sleep(0.1) # avoid hoarding the cpu
 
         with message_lock:
-            if not message_list:
-                continue
+            if not message_list:   #if its empty
+                continue           #restarts the loop
             msg = message_list.pop(0)
 
         with socket_lock:
 
                 for list_client in socket_list[:]:
                     try:
-                        list_client.sendall(msg)
-                    except OSError as e:
+                        list_client.sendall(msg.encode())
+                    except OSError:
                         socket_list.remove(list_client)
                         list_client.close()
 
-broadcast_thread = threading.Thread(
-    target=broadcast_messages,
-    daemon=True
+def main():
+
+    broadcast_thread = threading.Thread(
+        target=broadcast_messages,
+        daemon=True
     )
-broadcast_thread.start()
-print("broadcast thread started")
+    broadcast_thread.start()
+    print("broadcast thread started")
 
-while True:
-    time.sleep(0.1)
-    try:
-        client, address = my_socket.accept()
-        tls_client = server_context.wrap_socket(client, server_side=True)
-        with socket_lock:
-            socket_list.append(tls_client)
-        client_thread = threading.Thread(
-            target=send_receive_data,
-            args=(tls_client, address),
-            daemon=True)
+    while True:
+        sleep(0.1) #dont wanna take up the cpu
+        try:
+            client, address = server_socket.accept()
+            tls_client = server_context.wrap_socket(client, server_side=True)
 
-        client_thread.start()
-        print("threads started")
+            with socket_lock:
+                socket_list.append(tls_client)
+            client_thread = threading.Thread(
+                target=send_receive_data,
+                args=(tls_client, address),
+                daemon=True)
 
-    except OSError:
-        pass
+            client_thread.start()
+            print("threads started")
 
-    except Exception as err:
-        print(err)
+        except OSError:
+            continue
+        except Exception as err:
+            print(err)
+
+main()
