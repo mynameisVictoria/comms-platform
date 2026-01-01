@@ -14,11 +14,7 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import json
-import queue
 import socket
-from datetime import datetime, timezone
-import ssl
-from time import sleep
 
 class JsonStoring:
     def __init__(self, file_name):
@@ -85,4 +81,3 @@ class NetworkIO:
             self.sock.sendall(data.encode("utf-8"))
         except Exception:
             return False
-
