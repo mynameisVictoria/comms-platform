@@ -1,4 +1,4 @@
-#  Copyright (C) <2026>  <mynameisVictoria> and <Victoria2048>
+#  Copyright (C) <2026>  <mynameisVictoria>
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -14,7 +14,10 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import json
+from time import sleep
+import sys
 import socket
+from datetime import datetime, timezone
 
 class JsonStoring:
     def __init__(self, file_name):
@@ -44,40 +47,20 @@ class JsonStoring:
             else:
                 return True
 
-json_storing = JsonStoring("user_data.json")
-
 class GeneralIO:
+    def __init__(self):
+        pass
     @staticmethod
-    def do_command(command):
-        if command == "/name":
-            new_name = input("Input new name: \n")
-            json_storing.write_name(new_name)
-        elif command == "/help":
-            print("do /name to change name\n")
+    def get_input():
+        while True:
+            sleep(0.1)
+            send_info_input = input("")
+            if not send_info_input.strip() == "":
+                return send_info_input
+            elif send_info_input == "exit":
+                sys.exit()
 
-class NetworkIO:
-    def __init__(self, sock):
-        self.sock = sock
-        self.PORT = 1111
-        self.HOST = "p9cx.org"
-
-    def try_connect(self):
-        try:
-            self.sock.connect((self.HOST, self.PORT))
-            return True
-        except socket.error:
-            return False
-
-    def socket_receive(self):
-            try:
-                return self.sock.recv(1024).decode("utf-8")
-            except socket.timeout:
-                return False
-            except Exception:
-                return False
-
-    def socket_send(self, data):
-        try:
-            self.sock.sendall(data.encode("utf-8"))
-        except Exception:
-            return False
+    @staticmethod
+    def format_message(username, message):
+        timestamp = datetime.now(timezone.utc).strftime('%H:%M:%S')
+        return f"[{timestamp} ] | {username}: {message}"
