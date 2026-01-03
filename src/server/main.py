@@ -13,7 +13,6 @@
 #   You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
 import socket
 from time import sleep
 import threading
@@ -72,6 +71,7 @@ def send_receive_data(thread_client, thread_address):
                 break
         except BrokenPipeError:
             with socket_lock:
+                thread_client.close()
                 socket_list.remove(thread_client)
 
 def broadcast_messages():
