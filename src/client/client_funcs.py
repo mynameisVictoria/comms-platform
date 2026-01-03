@@ -1,4 +1,4 @@
-#  Copyright (C) <2026>  <mynameisVictoria>
+#  Copyright (C) <2026>  <mynameisVictoria> and <Victoria2048>
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -18,10 +18,17 @@ from time import sleep
 import sys
 import socket
 from datetime import datetime, timezone
+import os
 
 class JsonStoring:
     def __init__(self, file_name):
         self.file_name = file_name
+        self._ensure_file_exists()
+
+    def _ensure_file_exists(self):
+        if not os.path.exists(self.file_name):
+            with open(self.file_name, "w", encoding="utf-8") as f:
+                json.dump({"name": None}, f)
 
     def get_name(self):
         with open(self.file_name, "r", encoding="utf-8") as file:
@@ -64,3 +71,10 @@ class GeneralIO:
     def format_message(username, message):
         timestamp = datetime.now(timezone.utc).strftime('%H:%M:%S')
         return f"[{timestamp} ] | {username}: {message}"
+"""    @staticmethod
+    def commands(given_command):
+        if given_command == "/help":
+            pass
+        if given_command == "/name":
+"""
+
