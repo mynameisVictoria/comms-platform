@@ -40,10 +40,8 @@ socket_lock = threading.Lock()
 message_lock = threading.Lock()
 history_lock = threading.Lock()
 
-
 server_socket.bind(("0.0.0.0", port))
 server_socket.listen(5)
-
 
 def receive_data(thread_client, thread_address):
     thread_client.settimeout(0.1)
@@ -79,9 +77,10 @@ def receive_data(thread_client, thread_address):
 
         except BrokenPipeError:
             with socket_lock:
-                thread_client.close()
                 socket_list.remove(thread_client)
-
+                thread_client.close()
+                print(f"Client disconnected:[{thread_address}]")
+                break
 def broadcast_messages():
     while True:
         sleep(0.1)  # avoid hoarding the cpu
@@ -95,7 +94,20 @@ def broadcast_messages():
 
             for client_socket in socket_list[:]:
                 try:
-                    client_socket.sendall(msg.encode())
+
+                    trimmed_msg = msg.strip().split(":")
+                    print(trimmed_msg)
+
+                    if "/online" in trimmed_msg:
+                        counter = 0
+                        for sockets in socket_list:
+                            counter += 1
+                        client_socket.sendall(str(counter).encode())
+                        print("sent online clients")
+
+                    else:
+                        client_socket.sendall(msg.encode())
+
                 except OSError:
                     socket_list.remove(client_socket)
                     client_socket.close()
