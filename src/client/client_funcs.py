@@ -1,4 +1,4 @@
-#  Copyright (C) <2026>  <mynameisVictoria> and <Victoria2048>
+#  Copyright (C) <2026>  <mynameisVictoria>
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
 import json
 from time import sleep
 import sys
-import socket
 from datetime import datetime, timezone
 import os
 
@@ -64,17 +63,34 @@ class GeneralIO:
             send_info_input = input("")
             if not send_info_input.strip() == "":
                 return send_info_input
-            elif send_info_input == "exit":
-                sys.exit()
 
     @staticmethod
     def format_message(username, message):
         timestamp = datetime.now(timezone.utc).strftime('%H:%M:%S')
         return f"[{timestamp} ] | {username}: {message}"
-"""    @staticmethod
-    def commands(given_command):
-        if given_command == "/help":
-            pass
-        if given_command == "/name":
-"""
+
+class Commands:
+    def __init__(self, given_command, json_obj):
+        self.given_command = given_command
+        self.json_obj = json_obj
+
+    def check_command(self):
+        if self.given_command == "/help":
+            self.help()
+        elif self.given_command == "/name":
+            self.change_name()
+        elif self.given_command == "/exit":
+            os._exit(0)
+        else:
+            return False
+
+    def change_name(self):
+        new_name = input("Enter new name: ")
+        self.json_obj.write_name(new_name)
+
+    @staticmethod
+    def help():
+        print(f"  Do /name to change you name, it will prompt you afterwards\n "
+              f"Do /exit to exit \n "
+              f"Do /online to check how many people are online \n ")
 
