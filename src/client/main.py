@@ -13,82 +13,110 @@
 #   You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import json
+import threading
+from queue import Queue
+from client_funcs import *
+import ssl
 from time import sleep
+import os 
 import sys
-from datetime import datetime, timezone
-import os
+import socket
 
-class JsonStoring:
-    def __init__(self, file_name):
-        self.file_name = file_name
-        self._ensure_file_exists()
+#-----------------CLIENT-------------------------#
 
-    def _ensure_file_exists(self):
-        if not os.path.exists(self.file_name):
-            with open(self.file_name, "w", encoding="utf-8") as f:
-                json.dump({"name": None}, f)
+HOSTNAME = "p9cx.org"
 
-    def get_name(self):
-        with open(self.file_name, "r", encoding="utf-8") as file:
-            contents = file.read()
-            dict_data = json.loads(contents)
-            name = dict_data["name"]
-            return name
-    def write_name(self,name):
-        with open(self.file_name,"r+", encoding="utf-8") as file:
-            contents = file.read()
-            file.seek(0)
-            file.truncate()
-            dict_data = json.loads(contents)
-            dict_data["name"] = name
-            file.write(json.dumps(dict_data))
+context = ssl.create_default_context()
 
-    def check_name(self):
-        with open(self.file_name, "r", encoding="utf-8") as file:
-            contents = file.read()
-            dict_data = json.loads(contents)
-            if dict_data["name"] is None:
-                return False
-            else:
-                return True
+PORT = 1111
+message_queue = Queue(maxsize=10)   # thread safe data exchange
+message_lock = threading.Lock()
 
-class GeneralIO:
-    def __init__(self):
-        pass
-    @staticmethod
-    def get_input():
-        while True:
-            sleep(0.1)
-            send_info_input = input("")
-            if not send_info_input.strip() == "":
-                return send_info_input
+if getattr(sys, "frozen", False):
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-    @staticmethod
-    def format_message(username, message):
-        timestamp = datetime.now(timezone.utc).strftime('%H:%M:%S')
-        return f"[{timestamp} ] | {username}: {message}"
+json_path = os.path.join(BASE_DIR, "user_data.json")
+storing = JsonStoring(json_path)
+user_io = GeneralIO()
 
-class Commands:
-    def __init__(self, given_command, json_obj):
-        self.given_command = given_command
-        self.json_obj = json_obj
+print("For more information check out the GitHub \n https://github.com/mynameisVictoria/comms-platform \nDo /help for help!")
 
-    def check_command(self):
-        if self.given_command == "/help":
-            self.help()
-        elif self.given_command == "/name":
-            self.change_name()
-        elif self.given_command == "/exit":
-            os._exit(0)
-        else:
-            return False
+if not storing.check_name():
+    name = input("Please enter your name: \n")
+    storing.write_name(name)
+elif storing.check_name():
+    yes_or_no = input(f"Do you want to change your name? Current name: {storing.get_name()} \n y or n \n ")
+    if yes_or_no.lower() == "y":
+        new_name = input("Please enter your new name: \n")
+        storing.write_name(new_name)
 
-    def change_name(self):
-        new_name = input("Enter new name: ")
-        self.json_obj.write_name(new_name)
+def handle_input():
+    while True:
+        input_data = input()
+        command = Commands(input_data, storing)
+        command.check_command()
+        with message_lock:
+            message_queue.put(input_data)
 
-    @staticmethod
-    def help():
-        print(f"Do /name to change you name, it will prompt you afterwards "
-              f"Do /exit to exit \n ")
+def socket_receive(recv_socket):
+
+    message_history = b""
+    while True:
+        try:
+            part = recv_socket.recv(1024)
+        except socket.timeout:
+            break
+        if not part:
+            break
+        message_history += part
+
+    print(message_history.decode("utf-8"))
+
+    while True:
+        sleep(0.1)
+        try:
+            print(recv_socket.recv(1024).decode("utf-8"))
+        except socket.timeout:
+            continue
+        except Exception as err:
+            print(err)
+
+def main():
+    while True:
+        sleep(0.5)
+        try:
+            my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            my_socket.settimeout(0.5)
+
+            tls_socket = context.wrap_socket(
+                my_socket,
+                server_hostname=HOSTNAME
+            )
+
+            tls_socket.connect((HOSTNAME, PORT))
+
+            recv_thread = threading.Thread(target=socket_receive, daemon=True, args=(tls_socket,))
+            recv_thread.start()
+
+            while True:
+                sleep(0.1)
+                if not message_queue.empty():  #if it's not empty, try to send the data
+                    try:
+                        with message_lock:
+                            message = message_queue.get()
+                            send_data = user_io.format_message(storing.get_name(), message)
+                            tls_socket.sendall(send_data.encode("utf-8"))
+                    except (socket.error, OSError):
+                        break
+
+        except socket.error as err:
+            print(f"socket error: {err}")
+
+
+input_thread = threading.Thread(target=handle_input, daemon=True)
+input_thread.start()
+
+main()
+input_thread.join()
