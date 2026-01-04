@@ -41,8 +41,6 @@ json_path = os.path.join(BASE_DIR, "user_data.json")
 storing = JsonStoring(json_path)
 user_io = GeneralIO()
 
-print("For more information check out the GitHub \n https://github.com/mynameisVictoria/comms-platform \nDo /help for help!")
-
 if not storing.check_name():
     name = input("Please enter your name: \n")
     storing.write_name(name)
@@ -72,6 +70,8 @@ def socket_receive(recv_socket):
         message_history += part
 
     print(message_history.decode("utf-8"))
+
+    print("For more information check out the GitHub \n https://github.com/mynameisVictoria/comms-platform \nDo /help for help!")
 
     while True:
         sleep(0.1)
