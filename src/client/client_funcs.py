@@ -18,6 +18,8 @@ from time import sleep
 import sys
 from datetime import datetime, timezone
 import os
+import ssl
+import socket
 
 class JsonStoring:
     def __init__(self, file_name):
@@ -93,4 +95,33 @@ class Commands:
         print(f"  Do /name to change you name, it will prompt you afterwards\n "
               f"Do /exit to exit \n "
               f"Do /online to check how many people are online \n ")
+
+class Network:
+    def __init__(self, HOSTNAME, PORT):
+        self.socket = None
+        self.context = ssl.create_default_context()
+        self.HOSTNAME = HOSTNAME
+        self.PORT = PORT
+
+    def tls_socket_creation(self):
+        my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        my_socket.settimeout(0.5)
+
+        tls_socket = self.context.wrap_socket(
+            my_socket,
+            server_hostname=self.HOSTNAME
+        )
+        self.socket = tls_socket
+
+    def connect(self):
+        if self.socket is None:
+            self.tls_socket_creation()
+        else:
+            self.socket.connect((self.HOSTNAME, self.PORT))
+
+    def socket_sendall(self, data): #pass this a non binary form please
+        if self.socket is None:
+            self.tls_socket_creation()
+        else:
+            self.socket.sendall(data.encode("utf-8"))
 

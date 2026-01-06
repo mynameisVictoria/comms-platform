@@ -88,15 +88,11 @@ def main():
     while True:
         sleep(0.5)
         try:
-            my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            my_socket.settimeout(0.5)
+            network = Network(HOSTNAME, PORT)
+            network.tls_socket_creation()
+            tls_socket = network.socket
 
-            tls_socket = context.wrap_socket(
-                my_socket,
-                server_hostname=HOSTNAME
-            )
-
-            tls_socket.connect((HOSTNAME, PORT))
+            network.connect()
 
             recv_thread = threading.Thread(target=socket_receive, daemon=True, args=(tls_socket,))
             recv_thread.start()
@@ -108,12 +104,14 @@ def main():
                         with message_lock:
                             message = message_queue.get()
                             send_data = user_io.format_message(storing.get_name(), message)
-                            tls_socket.sendall(send_data.encode("utf-8"))
+                            network.socket_sendall(send_data)
                     except (socket.error, OSError):
                         break
 
-        except socket.error as err:
-            print(f"socket error: {err}")
+        except socket.timeout:
+            continue
+        except Exception as err:
+            print(err)
 
 input_thread = threading.Thread(target=handle_input, daemon=True)
 input_thread.start()
