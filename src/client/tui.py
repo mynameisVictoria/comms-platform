@@ -48,7 +48,7 @@ class Tui:
 
         self.style = Style(
             [
-                ("output-field", "bg:#000044 #0000ff"),
+                ("output-field", "bg:#000044 #ffffff"),
                 ("input-field", "bg:#000000 #ffffff"),
                 ("line", "#004400"),
             ]
@@ -61,13 +61,14 @@ class Tui:
             mouse_support=True,
             full_screen=True,
         )
+        self.app = get_app()
+
 
     def accept(self, buff):
         try:
             output = self.input_field.text
         except BaseException as e:
             output = f"\n\n{e}"
-
         with messages_to_be_sent_lock:
             messages_to_be_sent.append(output)
 
@@ -83,21 +84,19 @@ class Tui:
         self.application.run()
 
     def network_main(self):
-        app = get_app()
         while True:
             time.sleep(0.1)
             try:
                 network = Network(DFLNVals.HOSTNAME, DFLNVals.PORT)
                 network.tls_socket_creation()
                 network.connect()
-                network.socket.settimeout(0.1)
 
                 threading.Thread(
                     target=self.recv_loop,
                     args=(network.socket,),
                     daemon=True).start()
 
-                network.socket_sendall("hello world \n")
+                network.socket_sendall("client connected")
 
                 while True:
                     time.sleep(0.1)
@@ -108,29 +107,24 @@ class Tui:
                                 to_be_sent = to_be_sent.replace('\r', '').replace('\n', '')
                                 network.socket_sendall(to_be_sent)
 
-                            else:
-                                continue
-
                         except socket.timeout:
                             continue
 
                         except (socket.error, OSError):
                             self.output_field.buffer.text += "it failed :("
-                            app.invalidate()
-                            #recv_thread.join()
+                            self.app.invalidate()
                             break
 
             except socket.timeout:
                 self.output_field.buffer.text += "it failed 2 :("
-                app.invalidate()
+                self.app.invalidate()
                 continue
             except Exception as e:
                 self.output_field.buffer.text += str(e)
-                app.invalidate()
+                self.app.invalidate()
                 break
 
     def recv_loop(self, sock):
-        app = get_app()
         while True:
             try:
                 data = sock.recv(4096)
@@ -138,13 +132,13 @@ class Tui:
                     break
 
                 self.output_field.buffer.text += data.decode()
-                app.invalidate()
+                self.output_field.buffer.cursor_position = len(self.output_field.text)
+                self.app.invalidate()
 
             except socket.timeout:
                 continue
             except OSError:
                 break
-
 
 if __name__ == "__main__":
     obj = Tui()
