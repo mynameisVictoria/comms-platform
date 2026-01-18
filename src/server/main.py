@@ -106,6 +106,7 @@ def broadcast_messages():
                         print("sent online clients")
 
                     else:
+                        msg += "\n"
                         client_socket.sendall(msg.encode())
 
                 except OSError:
