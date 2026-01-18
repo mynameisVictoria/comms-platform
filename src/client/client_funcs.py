@@ -75,6 +75,7 @@ class Commands:
         self.given_command = given_command
         self.json_obj = json_obj
 
+
     def check_command(self):
         if self.given_command == "/help":
             self.help()
@@ -104,23 +105,21 @@ class Network:
 
     def tls_socket_creation(self):
         my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        my_socket.settimeout(0.5)
 
         tls_socket = self.context.wrap_socket(
-            my_socket,
-            server_hostname=self.HOSTNAME
+           my_socket,
+           server_hostname=self.HOSTNAME
         )
         self.socket = tls_socket
 
     def connect(self):
         if self.socket is None:
             self.tls_socket_creation()
-        else:
-            self.socket.connect((self.HOSTNAME, self.PORT))
+        self.socket.connect((self.HOSTNAME, self.PORT))
 
     def socket_sendall(self, data): #pass this a non binary type please
         if self.socket is None:
             self.tls_socket_creation()
-        else:
-            self.socket.sendall(data.encode("utf-8"))
+
+        self.socket.sendall(data.encode("utf-8"))
 

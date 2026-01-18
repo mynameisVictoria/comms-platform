@@ -1,6 +1,7 @@
 from multiprocessing.reduction import recvfds
 
 from prompt_toolkit.document import Document
+from prompt_toolkit.filters import app
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout.containers import HSplit, Window
 from prompt_toolkit.layout.layout import Layout
@@ -67,10 +68,8 @@ class Tui:
         except BaseException as e:
             output = f"\n\n{e}"
 
-        new_text = self.output_field.text + output + "\n"
-
         with messages_to_be_sent_lock:
-            messages_to_be_sent.append(new_text)
+            messages_to_be_sent.append(output)
 
 
     def main(self):
@@ -91,9 +90,14 @@ class Tui:
                 network = Network(DFLNVals.HOSTNAME, DFLNVals.PORT)
                 network.tls_socket_creation()
                 network.connect()
+                network.socket.settimeout(0.1)
 
-                recv_thread = threading.Thread(target=self.constant_receive, args=(network,))
-                recv_thread.start()
+                threading.Thread(
+                    target=self.recv_loop,
+                    args=(network.socket,),
+                    daemon=True).start()
+
+                network.socket_sendall("hello world \n")
 
                 while True:
                     time.sleep(0.1)
@@ -125,9 +129,21 @@ class Tui:
                 app.invalidate()
                 break
 
-    def constant_receive(self, network_object):
-        pass
+    def recv_loop(self, sock):
+        app = get_app()
+        while True:
+            try:
+                data = sock.recv(4096)
+                if not data:
+                    break
 
+                self.output_field.buffer.text += data.decode()
+                app.invalidate()
+
+            except socket.timeout:
+                continue
+            except OSError:
+                break
 
 
 if __name__ == "__main__":
