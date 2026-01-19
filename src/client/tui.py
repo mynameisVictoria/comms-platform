@@ -1,4 +1,4 @@
-
+from client_funcs import JsonStoring
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout.containers import HSplit, Window
 from prompt_toolkit.layout.layout import Layout
@@ -59,6 +59,7 @@ class Tui:
             full_screen=True,
         )
         self.app = get_app()
+        self.json_obj = JsonStoring("user_data.json")
 
 
     def accept(self, buff):
@@ -93,7 +94,7 @@ class Tui:
                     args=(network.socket,),
                     daemon=True).start()
 
-                network.socket_sendall("client connected")
+                network.socket_sendall(self.json_obj.get_name())
 
                 while True:
                     time.sleep(0.1)

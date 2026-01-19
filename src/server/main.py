@@ -13,6 +13,7 @@
 #   You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from server_methods import format_message
 import socket
 from time import sleep
 import threading
@@ -43,8 +44,12 @@ history_lock = threading.Lock()
 server_socket.bind(("0.0.0.0", port))
 server_socket.listen()
 
+client_username_dict =  {}
+
 def receive_data(thread_client, thread_address):
-    thread_client.settimeout(0.1)
+    thread_client.settimeout(0.5)
+    username = thread_client.recv(1024).decode("utf8")
+    client_username_dict.update({thread_client: username})
     while True:
         sleep(0.1)  #not to hoard the cpu lol
         try:
@@ -87,7 +92,7 @@ def broadcast_messages():
         sleep(0.1)  # avoid hoarding the cpu
 
         with message_lock:
-            if not message_broadcast_list.pop(0):
+            if not message_broadcast_list:
                 continue
             msg = message_broadcast_list.pop(0)
 
@@ -97,10 +102,8 @@ def broadcast_messages():
                 try:
 
                     trimmed_msg = msg.strip().split(":")
-                    print(trimmed_msg)
-
-                    msg += "\n"
-                    client_socket.sendall(msg.encode())
+                    username = client_username_dict.get(client_socket)
+                    client_socket.sendall(format_message(username, trimmed_msg).encode("utf8"))
 
                 except OSError:
                     socket_list.remove(client_socket)
@@ -125,11 +128,11 @@ def main():
             with history_lock:
                 for index in message_history:
                     history_data += index + "\n"
-
                 tls_client.sendall(history_data.encode())
 
             with socket_lock:
                 socket_list.append(tls_client)
+
             client_thread = threading.Thread(
                 target=receive_data,
                 args=(tls_client, address),
