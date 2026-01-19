@@ -54,47 +54,6 @@ class JsonStoring:
             else:
                 return True
 
-class GeneralIO:
-    def __init__(self):
-        pass
-    @staticmethod
-    def get_input():
-        while True:
-            sleep(0.1)
-            send_info_input = input("")
-            if not send_info_input.strip() == "":
-                return send_info_input
-
-    @staticmethod
-    def format_message(username, message):
-        timestamp = datetime.now(timezone.utc).strftime('%H:%M:%S')
-        return f"[{timestamp} ] | {username}: {message}"
-
-class Commands:
-    def __init__(self, given_command, json_obj):
-        self.given_command = given_command
-        self.json_obj = json_obj
-
-
-    def check_command(self):
-        if self.given_command == "/help":
-            self.help()
-        elif self.given_command == "/name":
-            self.change_name()
-        elif self.given_command == "/exit":
-            os._exit(0)
-        else:
-            return False
-
-    def change_name(self):
-        new_name = input("Enter new name: ")
-        self.json_obj.write_name(new_name)
-
-    @staticmethod
-    def help():
-        print(f"  Do /name to change you name, it will prompt you afterwards\n "
-              f"Do /exit to exit \n "
-              f"Do /online to check how many people are online \n ")
 
 class Network:
     def __init__(self, HOSTNAME, PORT):
