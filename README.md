@@ -15,6 +15,7 @@ simple communication, and I geuss techincly data sharing lol.
 ## Release state
 - currently in alpha
 - right now its not great lol
+- server might be broken since im testing on it, so yea 
 
 ---
 
