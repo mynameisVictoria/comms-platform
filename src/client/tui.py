@@ -1,14 +1,10 @@
-from client_funcs import JsonStoring
-from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout.containers import HSplit, Window
-from prompt_toolkit.layout.layout import Layout
-from prompt_toolkit.styles import Style
-from prompt_toolkit.widgets import TextArea
-from prompt_toolkit.application import Application, get_app
-from client_funcs import *
+import dataclasses
 import threading
 import time
-import dataclasses
+from textual.app import App, ComposeResult
+from textual.widgets import Input, Log
+from client_funcs import *
+
 
 @dataclasses.dataclass
 class NVals:
@@ -17,109 +13,58 @@ class NVals:
 
 DFLNVals = NVals("p9cx.org", 1111)
 
-messages_to_be_sent = []
-messages_to_be_sent_lock = threading.Lock()
-received_message = []
-received_message_lock = threading.Lock()
+typed_message = []
+recevied_message = []
+recevied_message_lock = threading.Lock()
+typed_message_lock = threading.Lock()
 
-class Tui:
-    def __init__(self):
-        self.output_field = TextArea(style="class:output-field")
-        self.input_field = TextArea(
-            height=1,
-            prompt=">>> ",
-            style="class:input-field",
-            multiline=False,
-            wrap_lines=False,
-        )
+class InputApp(App):
 
-        self.container = HSplit(
-            [
-                self.output_field,
-                Window(height=1, char="-", style="class:line"),
-                self.input_field,
-            ]
-        )
+    CSS_PATH = "client_tcss.tcss"
 
-        self.kb = KeyBindings()
+    def compose(self) -> ComposeResult:
+        yield Log(id="history")
+        yield Input(placeholder="lorem ipsum i forgot the rest", id="user_name")
 
-        self.style = Style(
-            [
-                ("output-field", "bg:#000044 #ffffff"),
-                ("input-field", "bg:#000000 #ffffff"),
-                ("line", "#004400"),
-            ]
-        )
+    def on_input_submitted(self, event: Input.Submitted) -> None:
 
-        self.application = Application(
-            layout=Layout(self.container, focused_element=self.input_field),
-            key_bindings=self.kb,
-            style=self.style,
-            mouse_support=True,
-            full_screen=True,
-        )
-        self.app = get_app()
-        self.json_obj = JsonStoring("user_data.json")
-
-
-    def accept(self, buff):
-        try:
-            output = self.input_field.text
-        except BaseException as e:
-            output = f"\n\n{e}"
-        with messages_to_be_sent_lock:
-            messages_to_be_sent.append(output)
-
-
-    def main(self):
-        self.input_field.accept_handler = self.accept
-
-        @self.kb.add("c-c")
-        @self.kb.add("c-q")
-        def _(event):
-            event.app.exit()
-
-        self.application.run()
+        with typed_message_lock:
+            typed_message.append(event.value)
+        event.input.value = ""
 
     def network_main(self):
         while True:
             time.sleep(0.1)
             try:
+
                 network = Network(DFLNVals.HOSTNAME, DFLNVals.PORT)
                 network.tls_socket_creation()
                 network.connect()
+                network.socket_sendall("username")
 
                 threading.Thread(
                     target=self.recv_loop,
                     args=(network.socket,),
                     daemon=True).start()
 
-                network.socket_sendall(self.json_obj.get_name())
-
                 while True:
                     time.sleep(0.1)
-                    with messages_to_be_sent_lock:
+                    with typed_message_lock:
                         try:
-                            if len(messages_to_be_sent) != 0:
-                                to_be_sent = messages_to_be_sent.pop()
-                                to_be_sent = to_be_sent.replace('\r', '').replace('\n', '')
+                            if len(typed_message) != 0:
+                                to_be_sent = typed_message.pop()
                                 network.socket_sendall(to_be_sent)
 
                         except socket.timeout:
                             continue
 
                         except (socket.error, OSError):
-                            self.output_field.buffer.text += "it failed :("
-                            self.app.invalidate()
                             break
 
             except socket.timeout:
-                self.output_field.buffer.text += "it failed 2 :("
-                self.app.invalidate()
                 continue
-            except Exception as e:
-                self.output_field.buffer.text += str(e)
-                self.app.invalidate()
+
+            except Exception:
                 break
 
     def recv_loop(self, sock):
@@ -129,17 +74,20 @@ class Tui:
                 if not data:
                     break
 
-                self.output_field.buffer.text += data.decode()
-                self.output_field.buffer.cursor_position = len(self.output_field.text)
-                self.app.invalidate()
+                text = data.decode(errors="ignore")
+                self.call_from_thread(
+                    self.query_one("#history").write, text
+                )
 
             except socket.timeout:
                 continue
             except OSError:
                 break
 
+    def on_mount(self):
+        threading.Thread(target=self.network_main, daemon=True).start()
+
+
 if __name__ == "__main__":
-    obj = Tui()
-    network_thread = threading.Thread(target=obj.network_main, daemon=True)
-    network_thread.start()
-    obj.main()
+    app = InputApp()
+    app.run()
