@@ -14,8 +14,6 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import json
-from time import sleep
-from datetime import datetime, timezone
 import os
 import ssl
 import socket

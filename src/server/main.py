@@ -65,9 +65,6 @@ def receive_data(thread_client, thread_address):
             with message_lock:
                 message_broadcast_list.append(message_data)
 
-            with history_lock:
-                message_history.append(message_data)
-
             print(f"Received from {thread_address}: {message_data}")
 
         except socket.timeout:
@@ -103,7 +100,11 @@ def broadcast_messages():
 
                     trimmed_msg = msg.strip().split(":")
                     username = client_username_dict.get(client_socket)
-                    client_socket.sendall(format_message(username, trimmed_msg).encode("utf8"))
+                    formated_msg = format_message(username, trimmed_msg)
+                    client_socket.sendall(formated_msg.encode("utf-8"))
+
+                    with history_lock:
+                        message_history.append(formated_msg)
 
                 except OSError:
                     socket_list.remove(client_socket)

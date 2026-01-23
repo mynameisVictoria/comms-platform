@@ -83,6 +83,21 @@ class InputApp(App):
                 break
 
     def recv_loop(self, sock):
+
+        message_history = b""
+        while True:
+            try:
+                part = sock.recv(4096)
+            except socket.timeout:
+                break
+            if not part:
+                break
+            message_history += part
+
+            self.call_from_thread(
+                self.query_one("#history").write, message_history.decode("utf8")
+            )
+
         while True:
             try:
                 data = sock.recv(4096)
@@ -101,7 +116,6 @@ class InputApp(App):
 
     def on_mount(self):
         threading.Thread(target=self.network_main, daemon=True).start()
-
 
 if __name__ == "__main__":
     app = InputApp()
