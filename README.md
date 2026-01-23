@@ -5,7 +5,6 @@ simple communication, and I geuss techincly data sharing lol.
 ## Quick Facts
 - built because: communications platforms are fun!
 - Runs in: the terminal
-- i find ai really horrible, ethiccaly apart from anything else, so i dont indend any ai code being part of this project  
 
 ## Tech Stuff
 - it is server-client model
@@ -16,9 +15,7 @@ simple communication, and I geuss techincly data sharing lol.
 ## Release state
 - currently in alpha
 - right now its not great lol
-
-Current version:
-0.0.2-alpha
+- server might be broken since im testing on it, so yea 
 
 ---
 
