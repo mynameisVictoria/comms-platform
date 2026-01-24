@@ -55,9 +55,9 @@ class InputApp(App):
                 network = Network(DFLNVals.HOSTNAME, DFLNVals.PORT)
                 network.tls_socket_creation()
                 network.connect()
-                network.socket_sendall("username")
+                network.socket_sendall("tori")
 
-                threading.Thread(
+                receive_thread = threading.Thread(
                     target=self.recv_loop,
                     args=(network.socket,),
                     daemon=True).start()
@@ -74,6 +74,7 @@ class InputApp(App):
                             continue
 
                         except (socket.error, OSError):
+                            receive_thread.join()
                             break
 
             except socket.timeout:
