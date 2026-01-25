@@ -55,7 +55,7 @@ class InputApp(App):
                 network = Network(DFLNVals.HOSTNAME, DFLNVals.PORT)
                 network.tls_socket_creation()
                 network.connect()
-                network.socket_sendall("tori")
+                network.socket_sendall("nottori")
 
                 receive_thread = threading.Thread(
                     target=self.recv_loop,
@@ -116,7 +116,9 @@ class InputApp(App):
                 break
 
     def on_mount(self):
-        threading.Thread(target=self.network_main, daemon=True).start()
+        network_thread = threading.Thread(target=self.network_main, daemon=True).start()
+    def test(self):
+        print("test")
 
 if __name__ == "__main__":
     app = InputApp()

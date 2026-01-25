@@ -37,50 +37,56 @@ server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 message_history = []
 message_broadcast_list = []
 socket_list = []
+socket_username_dict = {}
+socket_username_lock = threading.Lock()
 socket_lock = threading.Lock()
-message_lock = threading.Lock()
+message_broadcast_lock = threading.Lock()
 history_lock = threading.Lock()
 
 server_socket.bind(("0.0.0.0", port))
 server_socket.listen()
 
-client_username_dict =  {}
+# get the username in the dict with the client socket
+# get the indivudual messages in a tuple with the socket then after broadcasting it, remove it
+#
 
 def receive_data(thread_client, thread_address):
     thread_client.settimeout(0.5)
     username = thread_client.recv(1024).decode("utf8")
-    client_username_dict.update({thread_client: username})
+
+    with socket_username_lock:
+        socket_username_dict.update({thread_client: username})
+
     while True:
         sleep(0.1)  #not to hoard the cpu lol
         try:
             message_data = thread_client.recv(1024).decode("utf8")
 
             if not message_data:  # if no data is received
-                print(f"Client {thread_address} disconnected")
                 with socket_lock:
                     if thread_client in socket_list:
                         socket_list.remove(thread_client)
+
+                print(f"Client {thread_address} disconnected")
+
                 break
 
-            with message_lock:
-                message_broadcast_list.append(message_data)
+            with message_broadcast_lock:
+                message_broadcast_list.append((thread_client,message_data))
 
             print(f"Received from {thread_address}: {message_data}")
 
         except socket.timeout:
             pass
 
-        except ConnectionResetError:
+        except (BrokenPipeError, ConnectionResetError):
             with socket_lock:
                 socket_list.remove(thread_client)
                 thread_client.close()
-                print(f"Client disconnected:[{thread_address}]")
-                break
 
-        except BrokenPipeError:
-            with socket_lock:
-                socket_list.remove(thread_client)
-                thread_client.close()
+                with socket_lock:
+                    socket_list.remove(thread_client)
+
                 print(f"Client disconnected:[{thread_address}]")
                 break
 
@@ -88,23 +94,23 @@ def broadcast_messages():
     while True:
         sleep(0.1)  # avoid hoarding the cpu
 
-        with message_lock:
+        with message_broadcast_lock:
             if not message_broadcast_list:
                 continue
-            msg = message_broadcast_list.pop(0)
+
+            message_tuple = message_broadcast_list[0]
+            username, msg = message_tuple
 
         with socket_lock:
 
             for client_socket in socket_list[:]:
                 try:
 
-                    trimmed_msg = msg.strip().split(":")
-                    username = client_username_dict.get(client_socket)
-                    formated_msg = format_message(username, trimmed_msg)
-                    client_socket.sendall(formated_msg.encode("utf-8"))
+                    formatted_message = format_message(username, msg.strip())
+                    client_socket.sendall(formatted_message.encode("utf-8"))
 
                     with history_lock:
-                        message_history.append(formated_msg)
+                        message_history.append(formatted_message)
 
                 except OSError:
                     socket_list.remove(client_socket)
