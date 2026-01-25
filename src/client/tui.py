@@ -16,24 +16,22 @@
 import dataclasses
 import threading
 import time
-from textual.app import App, ComposeResult
 from textual.widgets import Input, Log
 from client_funcs import *
-
-
-@dataclasses.dataclass
-class NVals:
-    HOSTNAME: str
-    PORT: int
-
-DFLNVals = NVals("p9cx.org", 1111)
-
-typed_message = []
-recevied_message = []
-recevied_message_lock = threading.Lock()
-typed_message_lock = threading.Lock()
+from menu import *
 
 class InputApp(App):
+
+    @dataclasses.dataclass
+    class NVals:
+        HOSTNAME: str
+        PORT: int
+
+    DFLNVals = NVals("p9cx.org", 1111)
+    typed_message = []
+    recevied_message = []
+    recevied_message_lock = threading.Lock()
+    typed_message_lock = threading.Lock()
 
     CSS_PATH = "client_tcss.tcss"
 
@@ -43,8 +41,8 @@ class InputApp(App):
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
 
-        with typed_message_lock:
-            typed_message.append(event.value)
+        with self.typed_message_lock:
+            self.typed_message.append(event.value)
         event.input.value = ""
 
     def network_main(self):
@@ -52,7 +50,7 @@ class InputApp(App):
             time.sleep(0.1)
             try:
 
-                network = Network(DFLNVals.HOSTNAME, DFLNVals.PORT)
+                network = Network(self.DFLNVals.HOSTNAME, self.DFLNVals.PORT)
                 network.tls_socket_creation()
                 network.connect()
                 network.socket_sendall("nottori")
@@ -64,10 +62,10 @@ class InputApp(App):
 
                 while True:
                     time.sleep(0.1)
-                    with typed_message_lock:
+                    with self.typed_message_lock:
                         try:
-                            if len(typed_message) != 0:
-                                to_be_sent = typed_message.pop()
+                            if len(self.typed_message) != 0:
+                                to_be_sent = self.typed_message.pop()
                                 network.socket_sendall(to_be_sent)
 
                         except socket.timeout:
@@ -117,9 +115,12 @@ class InputApp(App):
 
     def on_mount(self):
         network_thread = threading.Thread(target=self.network_main, daemon=True).start()
-    def test(self):
-        print("test")
 
-if __name__ == "__main__":
-    app = InputApp()
-    app.run()
+
+
+if "__main__" == __name__:
+    menu_object = Menu()
+    menu_object.run()
+    Chatroom = InputApp()
+    Chatroom.run()
+
