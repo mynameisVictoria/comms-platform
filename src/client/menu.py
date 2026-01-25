@@ -3,7 +3,7 @@ from textual.app import App, ComposeResult
 from textual.widgets import Footer, Label
 
 class Menu(App[None]):
-
+    signal = ""
     BINDINGS = [
         ("[Tab]", "change", "Changes menu option",),
         ("ctrl+q", "quit", "Quit"),
@@ -26,7 +26,6 @@ class Menu(App[None]):
         yield Label(self.options_dict["1"], id="i1")
         yield Label(self.options_dict["2"], id="i2")
         yield Label(self.options_dict["3"], id="i3")
-        yield Label("penis", id="i4")
         yield Footer()
 
     def on_key(self, event: events.Key) -> None:
@@ -43,5 +42,6 @@ class Menu(App[None]):
                     label.update(self.options_dict[str(i)])
 
         elif event.key == "enter":
-            if self.currently_selected == 1:
-                self.exit()
+            self.signal = self.currently_selected
+
+

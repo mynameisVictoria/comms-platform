@@ -16,9 +16,10 @@
 import dataclasses
 import threading
 import time
+from textual.app import App, ComposeResult
 from textual.widgets import Input, Log
 from client_funcs import *
-from menu import *
+
 
 class InputApp(App):
 
@@ -115,12 +116,3 @@ class InputApp(App):
 
     def on_mount(self):
         network_thread = threading.Thread(target=self.network_main, daemon=True).start()
-
-
-
-if "__main__" == __name__:
-    menu_object = Menu()
-    menu_object.run()
-    Chatroom = InputApp()
-    Chatroom.run()
-
