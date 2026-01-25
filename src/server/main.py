@@ -20,6 +20,12 @@ import threading
 import ssl
 
 #-------------SERVER----------#
+#--- In full cander, I must reveal the truth, this code is absolute shit,     ↓
+#--- this script is a direct descendant of the first tcp server I ever        ↓
+#--- made if that matters. I will be incredibly shocked if this piece of      ↓
+#--- shit can handle more than 5 clients reliably (it cannot handle 1 client- ↓
+#--- reliably even)
+#--- I will fix it... eventually, good luck!
 
 port = 1111
 
@@ -35,20 +41,20 @@ server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 message_history = []
+history_lock = threading.Lock()
+
 message_broadcast_list = []
+message_broadcast_lock = threading.Lock()
+
 socket_list = []
+socket_lock = threading.Lock()
+
 socket_username_dict = {}
 socket_username_lock = threading.Lock()
-socket_lock = threading.Lock()
-message_broadcast_lock = threading.Lock()
-history_lock = threading.Lock()
 
 server_socket.bind(("0.0.0.0", port))
 server_socket.listen()
 
-# get the username in the dict with the client socket
-# get the indivudual messages in a tuple with the socket then after broadcasting it, remove it
-#
 
 def receive_data(thread_client, thread_address):
     thread_client.settimeout(0.5)
@@ -98,8 +104,14 @@ def broadcast_messages():
             if not message_broadcast_list:
                 continue
 
-            message_tuple = message_broadcast_list[0]
-            username, msg = message_tuple
+            message_tuple = message_broadcast_list.pop(0)
+            client_sock, msg = message_tuple
+
+            with socket_lock:
+                for key in socket_username_dict:
+                    if key == client_sock:
+                        username = socket_username_dict[key]
+
 
         with socket_lock:
 
