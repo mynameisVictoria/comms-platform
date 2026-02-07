@@ -16,12 +16,14 @@
 import dataclasses
 import threading
 import time
-from textual.app import App, ComposeResult
+
+from textual.app import Screen
+from textual.app import ComposeResult, App
 from textual.widgets import Input, Log
 from client_funcs import *
 
 
-class InputApp(App):
+class InputApp(Screen):
 
     @dataclasses.dataclass
     class NVals:
