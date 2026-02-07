@@ -46,6 +46,7 @@ class InputApp(Screen):
 
         with self.typed_message_lock:
             self.typed_message.append(event.value)
+
         event.input.value = ""
 
     def network_main(self):
@@ -56,12 +57,12 @@ class InputApp(Screen):
                 network = Network(self.DFLNVals.HOSTNAME, self.DFLNVals.PORT)
                 network.tls_socket_creation()
                 network.connect()
-                network.socket_sendall("nottori")
+                network.socket_sendall("name")
 
                 receive_thread = threading.Thread(
                     target=self.recv_loop,
                     args=(network.socket,),
-                    daemon=True).start()
+                ).start()
 
                 while True:
                     time.sleep(0.1)
@@ -96,7 +97,7 @@ class InputApp(Screen):
                 break
             message_history += part
 
-            self.call_from_thread(
+            self.app.call_from_thread(
                 self.query_one("#history").write, message_history.decode("utf8")
             )
 
@@ -107,7 +108,7 @@ class InputApp(Screen):
                     break
 
                 text = data.decode(errors="ignore")
-                self.call_from_thread(
+                self.app.call_from_thread(
                     self.query_one("#history").write, text
                 )
 
@@ -117,4 +118,6 @@ class InputApp(Screen):
                 break
 
     def on_mount(self):
-        network_thread = threading.Thread(target=self.network_main, daemon=True).start()
+        self.query_one("#history")
+        threading.Thread(target=self.network_main, daemon=True).start()
+
